@@ -128,6 +128,7 @@ export async function loginAction(data: z.infer<typeof userLoginSchema>): Promis
         await signIn("credentials", {
             email: userExists.email,
             password: password,
+            role: "user",
             redirect: true,
             redirectTo: "/onboarding",
         })

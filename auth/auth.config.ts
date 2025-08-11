@@ -75,32 +75,4 @@ export default {
         
     ],
     
-    // Add callbacks configuration
-    callbacks: {
-        // Add role and other user data to JWT token
-        jwt: async ({ token, user }) => {
-            if (user) {
-                // Copy user properties to token
-                token.role = user.role;
-                token.id = user.id;
-                token.email = user.email;
-                // If you have other properties you need:
-                // token.firstName = user.firstName;
-                // token.lastName = user.lastName;
-                // etc.
-                
-            }
-            return token;
-        },
-        
-        // Add token data to the session
-        session: async ({ session, token }) => {
-            if (session.user) {
-                session.user.role = token.role as string;
-                session.user.id = token.id as string;
-            }
-            return session;
-        }
-    },
-    
 } satisfies NextAuthConfig;
