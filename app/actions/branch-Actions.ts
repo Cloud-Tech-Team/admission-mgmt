@@ -11,6 +11,74 @@ interface BranchData {
     waitingList: number;
 }
 
+const DEFAULT_BRANCH_SEATS = {
+    superSeats: 9,
+    nriSeats: 9,
+    mngtSeats: 9,
+    waitingList: 0,
+};
+
+export async function ensureAllYearsHaveAllBranches() {
+    const years = await prisma.branches.findMany({
+        select: { year: true },
+        distinct: ["year"],
+    });
+
+    if (years.length === 0) {
+        return { success: true, created: 0 };
+    }
+
+    const existingBranches = await prisma.branches.findMany({
+        select: {
+            year: true,
+            name: true,
+        },
+    });
+
+    const existingPairs = new Set(
+        existingBranches.map((branch) => `${branch.year}:${branch.name}`)
+    );
+
+    const missingBranches = years.flatMap(({ year }) =>
+        branchesList
+            .filter((name) => !existingPairs.has(`${year}:${name}`))
+            .map((name) => ({
+                name,
+                year,
+                superSeats: DEFAULT_BRANCH_SEATS.superSeats,
+                nriSeats: DEFAULT_BRANCH_SEATS.nriSeats,
+                mngtSeats: DEFAULT_BRANCH_SEATS.mngtSeats,
+                totalSets:
+                    DEFAULT_BRANCH_SEATS.superSeats +
+                    DEFAULT_BRANCH_SEATS.nriSeats +
+                    DEFAULT_BRANCH_SEATS.mngtSeats,
+                occupiedSets: 0,
+                occupiedNri: 0,
+                occupiedMngt: 0,
+                occupiedSuper: 0,
+                nri: 0,
+                oci: 0,
+                ciwg: 0,
+                pio: 0,
+                waitingList: DEFAULT_BRANCH_SEATS.waitingList,
+                nriStudents: [],
+                ociStudents: [],
+                ciwgStudents: [],
+                pioStudents: [],
+            }))
+    );
+
+    if (missingBranches.length === 0) {
+        return { success: true, created: 0 };
+    }
+
+    const result = await prisma.branches.createMany({
+        data: missingBranches,
+    });
+
+    return { success: true, created: result.count };
+}
+
 
 export async function addYear(year: number) {
     const existingBranch = await prisma.branches.findFirst({
@@ -65,6 +133,8 @@ export async function addYear(year: number) {
     }
 }
 export async function getAllBreanchesByYear() {
+    await ensureAllYearsHaveAllBranches();
+
     const branches = await prisma.branches.findMany({
         select: {
             year: true,

@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/prisma/prisma";
+import { ensureAllYearsHaveAllBranches } from "./branch-Actions";
 
 type UpdateBranchParams = {
     year: number;
@@ -12,6 +13,8 @@ type UpdateBranchParams = {
 };
 
 export async function getAllAvailableYears() {
+    await ensureAllYearsHaveAllBranches();
+
     const years = await prisma.branches.findMany({
         select: {
             year: true
@@ -53,6 +56,8 @@ export async function getActiveYears() {
 
 export async function updateBranchAllocation(params: UpdateBranchParams) {
     try {
+        await ensureAllYearsHaveAllBranches();
+
         const { year, branchName, nriSeats, superSeats, mngtSeats, waitingList } = params;
 
         // Find the branch if it exists
@@ -67,6 +72,10 @@ export async function updateBranchAllocation(params: UpdateBranchParams) {
 
         if (!existingBranch) {
             console.log('branch not found');
+            return {
+                success: false,
+                message: `Branch ${branchName} not found for year ${year}`
+            };
         } else {
             // Update existing branch
             await prisma.branches.update({
