@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { getBranchDisplayName } from "@/app/constants/dropdownOptions";
 
 interface TableDisplayContentProps {
   id: string;
@@ -13,7 +14,7 @@ const TableDisplayContent: React.FC<TableDisplayContentProps> = ({ id, rows = []
       {Object.entries(rows).map(([key, value]) => (
         <div key={key} className="flex flex-row justify-between p-1">
           <div className="font-light">{key}:</div>
-          <div className="font-bold">{key === "Branch" && value === "AIDS" ? "AI & DS" : value}</div>
+          <div className="font-bold">{key === "Branch" ? getBranchDisplayName(String(value)) : value}</div>
         </div>
       ))}
     </div>

@@ -13,7 +13,7 @@ import { updateDeclerationDetails } from "@/app/actions/onboarding-actions";
 import { Branch } from "@/types/userTypes";
 import useUserStore from "@/app/store/userStore";
 import CustomToast from "../CustomToast";
-import { BRANCH_OPTIONS } from "@/app/constants/dropdownOptions";
+import { BRANCH_OPTIONS, getBranchCodeFromDisplayName, getBranchDisplayName } from "@/app/constants/dropdownOptions";
 
 // Define the validation schema with Zod
 const declarationSchema = z.object({
@@ -185,7 +185,7 @@ export default function Declaration() {
     if (!canProceed) {
       CustomToast({ 
         title: "Branch Not Available", 
-        description: `No seats available in ${data.branch === "AIDS" ? "AI & DS" : data.branch} for your quota category. Please select a different branch.`
+        description: `No seats available in ${getBranchDisplayName(data.branch)} for your quota category. Please select a different branch.`
       });
       return;
     }
@@ -245,11 +245,11 @@ export default function Declaration() {
                     id="branch"
                     label="Branch"
                     required={true}
-                    options={BRANCH_OPTIONS.map(branch => branch === "AIDS" ? "AI & DS" : branch)}
+                    options={BRANCH_OPTIONS.map(getBranchDisplayName)}
                     onChange={(e) =>
-                      handleBranchChange(e.target.value === "AI & DS" ? "AIDS" as Branch : e.target.value as Branch)
+                      handleBranchChange(getBranchCodeFromDisplayName(e.target.value))
                     }
-                    value={field.value === "AIDS" ? "AI & DS" : field.value}
+                    value={getBranchDisplayName(field.value)}
                   />
                   {errors.branch && (
                     <p className="text-red-500 text-sm mt-1">

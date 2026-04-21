@@ -10,6 +10,7 @@ import {
   Image,
 } from "@react-pdf/renderer";
 import { StructuredUserData } from "@/types/userTypes";
+import { getBranchDisplayName } from "@/app/constants/dropdownOptions";
 
 // Register fonts if needed
 // Font.register({
@@ -192,7 +193,7 @@ const StudentPDF = ({ student }: StudentPDFProps) => {
         phoneAlternate: student["Student Details"]?.Phone || "Not provided",
         sponsor: student["Student Details"]?.["NRI Sponsor"] || "Not provided",
         relation: student["Student Details"]?.["Relationship with Applicant"] || "Not provided",
-        branch: student["Branch Details"]?.Branch === "AIDS" ? "AI & DS" : student["Branch Details"]?.Branch || "CSE",
+        branch: getBranchDisplayName(student["Branch Details"]?.Branch) || "CSE",
         transactionId: student["Payment"]?.["Transaction Number"] || "Not provided",
         applyingYear: student["Student Details"]?.["Academic Year"] || "Not provided",
         quota: student["Student Details"]?.["Quota"] || "NRI",

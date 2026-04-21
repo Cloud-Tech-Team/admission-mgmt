@@ -22,6 +22,7 @@ import { useSession, signOut } from "next-auth/react";
 import ThemeToggle from "../components/ThemeToggle";
 import { StructuredUserData } from "@/types/userTypes";
 import { usePrintPDF } from "../hooks/usePrintPDF";
+import { getBranchDisplayName } from "@/app/constants/dropdownOptions";
 
 export default function Register() {
   const { userData, fetchUserData, clearUserData, isLoading, error } =
@@ -228,7 +229,7 @@ export default function Register() {
                 
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Branch Opted</p>
-                  <p className="text-sm font-medium">{userData["Branch Details"]["Branch"] === "AIDS" ? "AI & DS" : userData["Branch Details"]["Branch"]}</p>
+                  <p className="text-sm font-medium">{getBranchDisplayName(userData["Branch Details"]["Branch"])}</p>
                 </div>
                 
                 <div>
