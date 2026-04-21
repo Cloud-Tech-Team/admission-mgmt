@@ -9,7 +9,7 @@ import { ModalHeader, ModalBody, Modal, ModalContent, ModalFooter, useDisclosure
 import { getAllBreanchesByYear, toggleYearActivation, getYearActivationStatus, deleteYear } from "../../actions/branch-Actions";
 import useAdminStore from "@/app/store/adminStore";
 import { updateBranchAllocation } from "@/app/actions/seat-Management-Actions";
-import { BRANCH_OPTIONS, BranchCodeType } from "@/app/constants/dropdownOptions";
+import { BRANCH_OPTIONS, BranchCodeType, getBranchDisplayName } from "@/app/constants/dropdownOptions";
 import CustomToast from "../../components/CustomToast";
 // Use string union type to match both your API and component needs
 type BranchCode = BranchCodeType;
@@ -48,7 +48,7 @@ function BranchAllocation({
     >
       <CardHeader className="p-4">
         <h1 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-          {title === "AIDS" ? "AI & DS" : title}
+          {getBranchDisplayName(title)}
         </h1>
         <Button
           size="sm"

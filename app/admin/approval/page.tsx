@@ -22,6 +22,7 @@ import {
 } from "@heroui/react";
 
 import { Save, Search } from "lucide-react";
+import { getBranchDisplayName } from "@/app/constants/dropdownOptions";
 import NavbarAdmin from "../../components/NavbarAdmin";
 import { useState, useEffect } from "react";
 import {
@@ -335,8 +336,7 @@ export default function ApprovalDashboard() {
                             {student["Student Details"].Course || "B.Tech"}
                           </div>
                           <div className="text-xs text-default-500">
-                            {student["Branch Details"]?.Branch === "AIDS" ? "AI & DS" : student["Branch Details"]?.Branch ||
-                              "Not selected"}
+                            {getBranchDisplayName(student["Branch Details"]?.Branch) || "Not selected"}
                           </div>
                         </div>
                       </TableCell>

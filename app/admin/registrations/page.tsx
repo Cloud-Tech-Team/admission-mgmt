@@ -28,6 +28,7 @@ import {
 } from "@heroui/react";
 
 import { Save,Download, Search, Trash2, Printer, Eye } from "lucide-react";
+import { getBranchDisplayName } from "@/app/constants/dropdownOptions";
 import NavbarAdmin from "../../components/NavbarAdmin";
 import { useState, useEffect} from "react";
 import StudentDetails from "../../components/StudentDetails";
@@ -379,9 +380,9 @@ export default function RegistrationDashboard()
                       <TableCell>
                         <div>
                           <div className="font-medium">{student["Student Details"].Course || "B.Tech"}</div>
-                          <div className="text-xs text-default-500">
-                            {student["Branch Details"]?.Branch === "AIDS" ? "AI & DS" : student["Branch Details"]?.Branch || "Not selected"}
-                          </div>
+                                  <div className="text-xs text-default-500">
+                                    {getBranchDisplayName(student["Branch Details"]?.Branch) || "Not selected"}
+                                  </div>
                         </div>
                       </TableCell>
                       <TableCell>
