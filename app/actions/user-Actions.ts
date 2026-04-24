@@ -403,6 +403,67 @@ export async function deleteStudentById(userId: string) {
     }
 }
 
+export async function updateBasicInfo(
+    userId: string,
+    data: {
+        firstName: string;
+        middleName?: string;
+        lastName: string;
+        email: string;
+        mobileNumber: string;
+        keralaMobileNumber?: string;
+        gender: string;
+        dob: string; // ISO date string
+        religion: string;
+        cast: string;
+        aadharNo: number;
+    }
+) {
+    try {
+        const user = await prisma.user.update({
+            where: { id: userId },
+            data: {
+                firstName: data.firstName,
+                middleName: data.middleName || null,
+                lastName: data.lastName,
+                email: data.email,
+                mobileNumber: data.mobileNumber,
+                keralaMobileNumber: data.keralaMobileNumber || null,
+                gender: data.gender,
+                dob: new Date(data.dob),
+                religion: data.religion,
+                cast: data.cast,
+                aadharNo: data.aadharNo,
+            },
+        });
+
+        // Return updated structured data so UI can refresh without a full page reload
+        return {
+            success: true,
+            message: "Basic information updated successfully",
+            updatedFields: {
+                firstName: user.firstName,
+                middleName: user.middleName,
+                lastName: user.lastName,
+                email: user.email,
+                mobileNumber: user.mobileNumber,
+                keralaMobileNumber: user.keralaMobileNumber,
+                gender: user.gender,
+                dob: user.dob,
+                religion: user.religion,
+                cast: user.cast,
+                aadharNo: user.aadharNo,
+            },
+        };
+    } catch (error) {
+        console.error("Error updating basic info:", error);
+        return {
+            success: false,
+            message: `Failed to update basic info: ${error instanceof Error ? error.message : "Unknown error"}`,
+        };
+    }
+}
+
 export async function updateOnboardingStep(userId: string, step: number) {
     try {
         const user = await prisma.user.findUnique({
