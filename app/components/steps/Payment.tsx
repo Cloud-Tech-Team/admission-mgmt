@@ -116,7 +116,7 @@ export default function Payment() {
               <h1 className="p-4 text-2xl">Payment</h1>
               <div className="flex flex-col gap-10 space-y-4 md:space-y-0 md:flex-col md:space-x-4">
                 <p className="text-center text-red-500">
-                  {`Pay Provisional registration fee of Rs 1,50,000 for CSE, CS(Al), Al & DS, CS(CY) Rs 1,50,500 for ECE and Rs
+                  {`Pay Provisional registration fee of Rs 1,50,500 for CSE, CS(Al), Al & DS, CS(CY) Rs 1,50,500 for ECE and Rs
                   50,500 for Group-B programmes to the following bank account and upload the photo of transaction slip here`}
                 </p>
                 <div className="flex flex-col md:flex-row gap-4 flex-1 w-full">
