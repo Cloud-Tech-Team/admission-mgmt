@@ -4,4 +4,4 @@ type RegisterActionResult =
 
 type LoginActionResult =
     | { success: true; message: string; error?: null }
-    | { success: false; error: string };
+    | { success: false; error: string };declare module 'country-codes-list';

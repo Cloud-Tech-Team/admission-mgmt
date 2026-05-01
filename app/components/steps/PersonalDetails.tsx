@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import FloatingLabelInput from "../FloatingLabelInput";
 import InputDate from "../InputDate";
+import DropDownInput from "../DropDownInput";
 import { Button } from "@heroui/react";
 import { Checkbox } from "@heroui/checkbox";
 import FileUploadInput from "../FileUploadInput";
 import { personalDetailsAction } from "../../actions/onboarding-actions";
 import { type PersonalDetailsFormData } from "@/schemas";
+import { COUNTRY_CODES, COUNTRY_CODES_VALUES } from "../../constants/dropdownOptions";
 
 import useUserStore from "@/app/store/userStore";
 import { useSession } from "next-auth/react";
@@ -15,6 +17,7 @@ export default function PersonalDetails() {
   const [isSelected, setIsSelected] = useState(false);
   // const [fileLink, setFileLink] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [countryCode, setCountryCode] = useState(COUNTRY_CODES[0]);
 
   const session = useSession();
   // console.log("Session Data:", session.data);
@@ -109,11 +112,27 @@ export default function PersonalDetails() {
         }
       }
 
+      // Parse mobile number for country code
+      let parsedMobile = userData["Student Details"]["Phone"] || "";
+      let parsedCountryCode = COUNTRY_CODES[0];
+      if (parsedMobile.startsWith("+")) {
+        const foundCode = COUNTRY_CODES.find((displayStr) => {
+          const callingCode = COUNTRY_CODES_VALUES[displayStr];
+          return parsedMobile.startsWith(callingCode);
+        });
+        
+        if (foundCode) {
+          parsedCountryCode = foundCode;
+          parsedMobile = parsedMobile.slice(COUNTRY_CODES_VALUES[foundCode].length);
+        }
+      }
+      setCountryCode(parsedCountryCode);
+
       setFormData({
         firstName,
         middleName,
         lastName,
-        mobileNumber: userData["Student Details"]["Phone"] || "",
+        mobileNumber: parsedMobile,
         keralaMobileNumber: userData["Student Details"]["Kerala Phone"] || "",
         dob: dobString,
         photo:
@@ -292,8 +311,18 @@ export default function PersonalDetails() {
 
     try {
       CustomToast({ title: "Saving" });
-      console.log("Submitting personal details", formData);
-      const response = await personalDetailsAction(formData);
+      const selectedCallingCode = COUNTRY_CODES_VALUES[countryCode] || "+91";
+      const finalMobileNumber = selectedCallingCode === "+91" 
+        ? formData.mobileNumber 
+        : `${selectedCallingCode}${formData.mobileNumber}`;
+
+      const dataToSubmit = {
+        ...formData,
+        mobileNumber: finalMobileNumber,
+      };
+
+      console.log("Submitting personal details", dataToSubmit);
+      const response = await personalDetailsAction(dataToSubmit);
       if (response.success) {
         console.log(response.message);
 
@@ -355,17 +384,33 @@ export default function PersonalDetails() {
                 />
               </div>
               <div className="flex flex-col gap-4 md:flex-row ">
-                <FloatingLabelInput
-                  id={"contactNumber"}
-                  label={"Contact Ph. No(M)"}
-                  required={true}
-                  type={"number"}
-                  onChange={handleChange}
-                  value={formData.mobileNumber}
-                />
+                <div className="flex w-full space-x-4">
+                  <div className="flex-none w-1/3 sm:w-[150px]">
+                    <DropDownInput
+                      id={"countryCode"}
+                      label={"Code"}
+                      required={true}
+                      options={COUNTRY_CODES}
+                      value={countryCode}
+                      onChange={(e) => setCountryCode(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <FloatingLabelInput
+                      id={"contactNumber"}
+                      label={"Contact Ph. No"}
+                      required={true}
+                      type={"number"}
+                      onChange={handleChange}
+                      value={formData.mobileNumber}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col gap-4 md:flex-row ">
                 <FloatingLabelInput
                   id={"contactNumberKerala"}
-                  label={"Contact Ph. No(Kerala)"}
+                  label={"Kerala Ph. No"}
                   required={true}
                   type={"number"}
                   onChange={handleChange}

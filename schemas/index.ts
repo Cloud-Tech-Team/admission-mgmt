@@ -6,7 +6,7 @@ export const userRegisterSchema = z.object({
     middleName: z.string().max(60, "Name cannot be more than 60 characters").optional(),
     lastName: z.string().min(1, "Please provide a name").max(60, "Name cannot be more than 60 characters"),
     email: z.string().email("Please provide a valid email"),
-    mobileNumber: z.string().min(10, "Please provide a valid mobile number").max(10, "Please provide a valid mobile number"),
+    mobileNumber: z.string().min(5, "Please provide a valid mobile number").max(20, "Please provide a valid mobile number"),
     gender: z.string().min(1, "Please provide a gender"),
     dob: z.string().min(1, "Please provide a date of birth"),
     applyingYear: z.string().min(4, "Please provide an valid applying year"),
@@ -45,8 +45,8 @@ export const personalDetailsSchema = z.object({
     lastName: z.string().min(1, "Last name is required"),
     mobileNumber: z
         .string()
-        .min(10, "Mobile number must be 10 digits")
-        .max(10, "Mobile number must be 10 digits"),
+        .min(5, "Mobile number must be at least 5 digits")
+        .max(20, "Mobile number must be at most 20 digits"),
     keralaMobileNumber: z
         .string()
         .min(10, "Kerala mobile number must be 10 digits")

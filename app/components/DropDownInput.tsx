@@ -12,6 +12,7 @@ interface DropDownInputProps {
   color?: "primary" | "secondary" | "success" | "warning" | "default" | undefined;
   variant?: "bordered" | "flat" | "faded" | "underlined";
   labelPlacement?: "inside" | "outside" | "outside-left";
+  disabled?: boolean;
   onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
 }
 
@@ -25,6 +26,7 @@ const DropDownInput: React.FC<DropDownInputProps> = ({
   color = undefined,
   labelPlacement = "inside",
   size = "md",
+  disabled = false,
   value = "", // Add default value
 }) => {
   // Find the index of the value in options array
@@ -47,6 +49,7 @@ const DropDownInput: React.FC<DropDownInputProps> = ({
       size={size}
       label={label}
       id={id}
+      isDisabled={disabled}
       className="w-full"
       variant={variant}
       isRequired={required}
