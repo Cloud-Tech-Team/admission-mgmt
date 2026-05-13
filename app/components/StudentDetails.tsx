@@ -1,9 +1,12 @@
 "use client";
-import { Image } from "@heroui/react";
+import { Image, Button, useDisclosure } from "@heroui/react";
 import TableDisplayContent from "./TableDisplayContent";
+import EditBasicInfoModal from "./EditBasicInfoModal";
 import { useState, useEffect } from "react";
 import { StructuredUserData } from "@/types/userTypes";
 import { STUDENTDATA as mockData } from "@/app/mock/mockData"; // Mock data import
+import { Pencil } from "lucide-react";
+
 interface StudentDetailsProps {
   studentId?: string;
   student?: StructuredUserData;
@@ -15,6 +18,7 @@ export default function StudentDetails({
 }: StudentDetailsProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [studentData, setStudentData] = useState<any>(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   useEffect(() => {
     // If full student object is provided, use it
@@ -31,12 +35,36 @@ export default function StudentDetails({
     return <div className="p-8 text-center">Loading student data...</div>;
   }
 
+  // Called by the modal when save succeeds — merge updated fields into local state
+  const handleSaved = (updated: Partial<StructuredUserData>) => {
+    setStudentData((prev: StructuredUserData) => ({
+      ...prev,
+      ...updated,
+      "Student Details": {
+        ...prev["Student Details"],
+        ...(updated["Student Details"] ?? {}),
+      },
+    }));
+  };
+
   return (
     <div className="flex flex-col items-center justify-center w-full p-3">
       <div className="bg-textBoxBackground relative shadow-xl rounded-3xl p-4 sm:p-8 w-full max-w-[100%] sm:max-w-4xl ">
-        <h2 className="text-2xl font-semibold mb-6 text-center text-muthootRed">
-          Details of <span>{studentData['applicationNo'] || studentId} </span>
-        </h2>
+        {/* Header row with title + edit button */}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-semibold text-muthootRed">
+            Details of <span>{studentData["applicationNo"] || studentId}</span>
+          </h2>
+          <Button
+            size="sm"
+            variant="flat"
+            className="bg-muthootRed text-white"
+            startContent={<Pencil size={15} />}
+            onPress={onOpen}
+          >
+            Edit Basic Info
+          </Button>
+        </div>
 
         {/* Student Profile photo and signature */}
         <div className="flex flex-row justify-between space-x-4">
@@ -50,15 +78,15 @@ export default function StudentDetails({
           </div>
           <div className="flex flex-col items-center justify-end">
             <Image
-              src={studentData['Payment']['Transaction Slip'] || "/no_img.png"}
+              src={studentData["Payment"]["Transaction Slip"] || "/no_img.png"}
               alt="Transaction Slip"
               className="w-full h-full max-w-md p-2 max-h-[20rem] min-h-[20rem] object-contain rounded-xl"
             />
             <h1 className="text-center">Transaction Slip</h1>
             <div className="flex flex-col w-full p-2 rounded-lg shadow-md border border-background" id="transactionDetails">
               <div className="flex flex-row justify-between p-1">
-          <div className="font-light">Transaction Id:</div>
-          <div className="font-bold">{studentData['Payment']['Transaction Number'] || "Not provided"}</div>
+                <div className="font-light">Transaction Id:</div>
+                <div className="font-bold">{studentData["Payment"]["Transaction Number"] || "Not provided"}</div>
               </div>
             </div>
           </div>
@@ -171,6 +199,16 @@ export default function StudentDetails({
           />
         </div>
       </div>
+
+      {/* Edit Basic Info Modal */}
+      {studentData && (
+        <EditBasicInfoModal
+          isOpen={isOpen}
+          onClose={onClose}
+          student={studentData}
+          onSaved={handleSaved}
+        />
+      )}
     </div>
   );
 }

@@ -146,6 +146,8 @@ const NavbarAdmin: React.FC<NavbarAdminProps> = ({ mode = "" }) => {
               alt="Muthoot Logo"
               width={80}
               height={24}
+              loading="eager"
+              priority
               className="cursor-pointer object-contain h-auto w-full"
             />
           </div>

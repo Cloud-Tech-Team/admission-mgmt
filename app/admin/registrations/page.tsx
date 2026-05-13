@@ -27,8 +27,8 @@ import {
   Switch,
 } from "@heroui/react";
 
-import { Save,Download, Search, Trash2, Printer, Eye } from "lucide-react";
-import { getBranchDisplayName } from "@/app/constants/dropdownOptions";
+import { Save, Download, Search, Trash2, Printer, Eye } from "lucide-react";
+import { BRANCH_OPTIONS, PROGRAM_OPTIONS, QUOTA_OPTIONS, getBranchDisplayName } from "@/app/constants/dropdownOptions";
 import NavbarAdmin from "../../components/NavbarAdmin";
 import { useState, useEffect} from "react";
 import StudentDetails from "../../components/StudentDetails";
@@ -66,8 +66,28 @@ export default function RegistrationDashboard()
   } = useDisclosure();
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Export modal state
+  const {
+    isOpen: isExportModalOpen,
+    onOpen: onExportModalOpen,
+    onClose: onExportModalClose,
+  } = useDisclosure();
+  const [exportYear, setExportYear] = useState("");
+  const [registrationStart, setRegistrationStart] = useState("");
+  const [registrationEnd, setRegistrationEnd] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [exportQuota, setExportQuota] = useState("all");
+  const [exportProgram, setExportProgram] = useState("all");
+  const [exportBranch, setExportBranch] = useState("all");
+  const [exportSeatConfirmed, setExportSeatConfirmed] = useState("all");
+  const [exportCanOnboard, setExportCanOnboard] = useState("all");
+  const [exportPaymentStatus, setExportPaymentStatus] = useState("confirmed");
+  const [exportError, setExportError] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
+
   // Fetch available academic years on component mount
-  const { selectedYear } = useAdminStore();
+  const { selectedYear, years } = useAdminStore();
   // Track pending changes
   const [pendingChanges, setPendingChanges] = useState<Record<string, boolean>>({});
   const [isSaving, setIsSaving] = useState(false);
@@ -246,6 +266,112 @@ export default function RegistrationDashboard()
   const handlePrintStudent = async (student: StructuredUserData) => {
     await generatePDF(student);
   };
+
+  const resetExportFilters = () => {
+    setExportYear(selectedYear ? selectedYear.toString() : "");
+    setRegistrationStart("");
+    setRegistrationEnd("");
+    setStartDate("");
+    setEndDate("");
+    setExportQuota("all");
+    setExportProgram("all");
+    setExportBranch("all");
+    setExportSeatConfirmed("all");
+    setExportCanOnboard("all");
+    setExportPaymentStatus("confirmed");
+    setExportError("");
+  };
+
+  const handleOpenExport = () => {
+    resetExportFilters();
+    onExportModalOpen();
+  };
+
+  const handleRegistrationInput = (value: string, setter: (nextValue: string) => void) => {
+    setter(value.replace(/\D/g, ""));
+  };
+
+  const handleSelectChange = (setter: (value: string) => void) => (value: string) => {
+    setter(value);
+  };
+
+  const handleExport = async () => {
+    if (!exportYear) {
+      setExportError("Select a year to export.");
+      return;
+    }
+
+    setIsExporting(true);
+    setExportError("");
+
+    try {
+      const url = new URL("/api/admin/registrations/export", window.location.origin);
+      url.searchParams.set("year", exportYear);
+
+      if (registrationStart) {
+        url.searchParams.set("registrationStart", registrationStart);
+      }
+
+      if (registrationEnd) {
+        url.searchParams.set("registrationEnd", registrationEnd);
+      }
+
+      if (startDate) {
+        url.searchParams.set("startDate", startDate);
+      }
+
+      if (endDate) {
+        url.searchParams.set("endDate", endDate);
+      }
+
+      if (exportQuota !== "all") {
+        url.searchParams.set("quota", exportQuota);
+      }
+
+      if (exportProgram !== "all") {
+        url.searchParams.set("program", exportProgram);
+      }
+
+      if (exportBranch !== "all") {
+        url.searchParams.set("branch", exportBranch);
+      }
+
+      if (exportSeatConfirmed !== "all") {
+        url.searchParams.set("seatConfirmed", exportSeatConfirmed);
+      }
+
+      if (exportCanOnboard !== "all") {
+        url.searchParams.set("canOnboard", exportCanOnboard);
+      }
+
+      if (exportPaymentStatus !== "all") {
+        url.searchParams.set("paymentStatus", exportPaymentStatus);
+      }
+
+      const response = await fetch(url.toString());
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message || "Export failed");
+      }
+
+      const blob = await response.blob();
+      const disposition = response.headers.get("Content-Disposition") || "";
+      const fileMatch = disposition.match(/filename=\"?([^\"]+)\"?/);
+      const fileName = fileMatch?.[1] || `registrations_${exportYear}.csv`;
+
+      const link = document.createElement("a");
+      link.href = window.URL.createObjectURL(blob);
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Export error:", error);
+      setExportError(error instanceof Error ? error.message : "Export failed. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
   
   // Users are already filtered and sorted on the server
   const filteredAndSortedUsers = users;
@@ -289,6 +415,7 @@ export default function RegistrationDashboard()
                   className="bg-muthootRed text-white"
                   startContent={<Download size={18} />}
                   isDisabled={loading || filteredAndSortedUsers.length === 0}
+                  onPress={handleOpenExport}
                 >
                   Export
                 </Button>
@@ -312,7 +439,6 @@ export default function RegistrationDashboard()
               <div className="flex items-center gap-2">
                 <span className="text-sm whitespace-nowrap">Sort by:</span>
                 <Select
-                  defaultSelectedKeys={["newest"]}
                   selectedKeys={[sortBy]}
                   onChange={(e) => {
                     setSortBy(e.target.value);
@@ -502,6 +628,131 @@ export default function RegistrationDashboard()
           {() => (
             <>
               <ModalBody className="p-0">{selectedStudent && <StudentDetails student={selectedStudent} />}</ModalBody>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Modal for CSV Export */}
+      <Modal
+        isOpen={isExportModalOpen}
+        onClose={onExportModalClose}
+        size="3xl"
+        scrollBehavior="inside"
+        classNames={{
+          base: "bg-textBoxBackground",
+          header: "border-b-1 border-default",
+          footer: "border-t-1 border-default",
+        }}
+      >
+        <ModalContent>
+          {(onCloseExport) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                <h3 className="text-lg font-semibold">Export registrations</h3>
+                <p className="text-sm text-default-500">
+                  Defaults to all records for the selected year.
+                </p>
+              </ModalHeader>
+              <ModalBody>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-sm font-medium text-default-700">Academic year</label>
+                    <select className="p-2 border rounded-md text-sm bg-default-100 border-default-200" value={exportYear || "all"} onChange={(e) => setExportYear(e.target.value)}>
+                      <option value="all">All years</option>
+                      {years.map((year) => <option key={year} value={year.toString()}>{year}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-sm font-medium text-default-700">Quota</label>
+                    <select className="p-2 border rounded-md text-sm bg-default-100 border-default-200" value={exportQuota} onChange={(e) => setExportQuota(e.target.value)}>
+                      <option value="all">All quotas</option>
+                      {QUOTA_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-sm font-medium text-default-700">Program</label>
+                    <select className="p-2 border rounded-md text-sm bg-default-100 border-default-200" value={exportProgram} onChange={(e) => setExportProgram(e.target.value)}>
+                      <option value="all">All programs</option>
+                      {PROGRAM_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-sm font-medium text-default-700">Branch</label>
+                    <select className="p-2 border rounded-md text-sm bg-default-100 border-default-200" value={exportBranch} onChange={(e) => setExportBranch(e.target.value)}>
+                      <option value="all">All branches</option>
+                      {BRANCH_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-sm font-medium text-default-700">Seat confirmed</label>
+                    <select className="p-2 border rounded-md text-sm bg-default-100 border-default-200" value={exportSeatConfirmed} onChange={(e) => setExportSeatConfirmed(e.target.value)}>
+                      <option value="all">All</option>
+                      <option value="yes">Yes</option>
+                      <option value="no">No</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-sm font-medium text-default-700">Can onboard</label>
+                    <select className="p-2 border rounded-md text-sm bg-default-100 border-default-200" value={exportCanOnboard} onChange={(e) => setExportCanOnboard(e.target.value)}>
+                      <option value="all">All</option>
+                      <option value="yes">Yes</option>
+                      <option value="no">No</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-sm font-medium text-default-700">Payment status</label>
+                    <select className="p-2 border rounded-md text-sm bg-default-100 border-default-200" value={exportPaymentStatus} onChange={(e) => setExportPaymentStatus(e.target.value)}>
+                      <option value="all">All</option>
+                      <option value="confirmed">Confirmed</option>
+                      <option value="missing">Missing</option>
+                    </select>
+                  </div>
+                  <Input
+                    type="date"
+                    label="Start date"
+                    size="sm"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
+                  <Input
+                    type="date"
+                    label="End date"
+                    size="sm"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
+                  <Input
+                    label="Registration start"
+                    size="sm"
+                    placeholder="Digits only (e.g. 20250001)"
+                    value={registrationStart}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    onChange={(e) => handleRegistrationInput(e.target.value, setRegistrationStart)}
+                  />
+                  <Input
+                    label="Registration end"
+                    size="sm"
+                    placeholder="Digits only (e.g. 20259999)"
+                    value={registrationEnd}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    onChange={(e) => handleRegistrationInput(e.target.value, setRegistrationEnd)}
+                  />
+                </div>
+                {exportError ? (
+                  <p className="text-sm text-danger-600">{exportError}</p>
+                ) : null}
+              </ModalBody>
+              <ModalFooter>
+                <Button color="default" variant="light" onPress={onCloseExport} isDisabled={isExporting}>
+                  Cancel
+                </Button>
+                <Button color="warning" onPress={handleExport} isLoading={isExporting}>
+                  Export CSV
+                </Button>
+              </ModalFooter>
             </>
           )}
         </ModalContent>
