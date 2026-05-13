@@ -78,15 +78,7 @@ export async function GET(request: Request) {
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
 
-    const where: {
-      applyingYear?: string;
-      quota?: string;
-      program?: string;
-      seatConfirmed?: boolean;
-      canOnboard?: boolean;
-      createdAt?: { gte?: Date; lte?: Date };
-      declaration?: { is: { branch: string } };
-    } = {};
+    const where: any = {};
 
     if (year !== "all") {
       where.applyingYear = year;
@@ -127,6 +119,7 @@ export async function GET(request: Request) {
 
     let users = await prisma.user.findMany({
       where,
+
       orderBy: { createdAt: "asc" },
     });
 
