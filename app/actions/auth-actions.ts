@@ -43,9 +43,12 @@ export async function loginAdmin(data: z.infer<typeof userLoginSchema>) {
 
     const { email, password } = validatedData;
 
-    const userExists = await prisma.admin.findUnique({
+    const userExists = await prisma.admin.findFirst({
         where: {
-            email: email
+            email: {
+                equals: email,
+                mode: "insensitive"
+            }
         }
     })
 
@@ -111,9 +114,12 @@ export async function loginAction(data: z.infer<typeof userLoginSchema>): Promis
 
     const { email, password } = validatedData;
 
-    const userExists = await prisma.user.findUnique({
+    const userExists = await prisma.user.findFirst({
         where: {
-            email: email
+            email: {
+                equals: email,
+                mode: "insensitive"
+            }
         }
     })
 
@@ -260,9 +266,12 @@ export async function getUser(email: string) {
 
     try {
 
-        const user = await prisma.user.findUnique({
+        const user = await prisma.user.findFirst({
             where: {
-                email: email
+                email: {
+                    equals: email,
+                    mode: "insensitive"
+                }
             }
         });
 
@@ -284,8 +293,13 @@ export async function getUser(email: string) {
 export async function requestPasswordReset(email: string) {
     try {
         // Check if user exists
-        const user = await prisma.user.findUnique({
-            where: { email },
+        const user = await prisma.user.findFirst({
+            where: { 
+                email: {
+                    equals: email,
+                    mode: "insensitive"
+                }
+            },
         });
 
         if (!user) {
@@ -365,8 +379,13 @@ export async function resetPassword(token: string, newPassword: string) {
         }
 
         // Find the user
-        const user = await prisma.user.findUnique({
-            where: { email: passwordReset.email },
+        const user = await prisma.user.findFirst({
+            where: {
+                email: {
+                    equals: passwordReset.email,
+                    mode: "insensitive"
+                }
+            },
         });
 
         if (!user) {

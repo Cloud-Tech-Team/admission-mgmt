@@ -35,9 +35,12 @@ export default {
                 const { email, password, role } = validCredentials.data;
                 if (role === "admin") {
                     console.log("yeyeyey")
-                    const admin = await prisma.admin.findUnique({
+                    const admin = await prisma.admin.findFirst({
                         where: {
-                            email: email,
+                            email: {
+                                equals: email,
+                                mode: "insensitive"
+                            }
                         },
                     });
                     if (!admin || !admin.password || !admin.email) {
@@ -52,9 +55,12 @@ export default {
                     }
                 }
                 else {
-                    const user = await prisma.user.findUnique({
+                    const user = await prisma.user.findFirst({
                         where: {
-                            email,
+                            email: {
+                                equals: email,
+                                mode: "insensitive"
+                            }
                         },
                     });
                     if (!user || !user.password || !user.email) {
